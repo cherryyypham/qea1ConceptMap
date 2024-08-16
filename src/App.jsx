@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -10,99 +10,92 @@ import {
   useEdgesState,
   useReactFlow,
 } from '@xyflow/react';
-import {
-  forceSimulation,
-  forceLink,
-  forceManyBody,
-  forceX,
-  forceY,
-} from 'd3-force';
 import '@xyflow/react/dist/style.css';
 import { initialNodes, initialEdges } from './utils/nodes-edges.js';
 import { collide } from './utils/collide.js';
+import { forceSimulation, forceLink, forceManyBody, forceX, forceY } from 'd3-force';
+import { Modal } from 'antd';
 
-// Initiate force simulation
-const createSimulation = (nodes, edges) => {
-  return forceSimulation(nodes)
-    .force('charge', forceManyBody().strength(-500))
-    .force('x', forceX().x(0).strength(0.05))
-    .force('y', forceY().y(0).strength(0.05))
-    .force('collide', collide())
-    .force(
-      'link',
-      forceLink(edges)
-        .id((d) => d.id)
-        .strength(0.05)
-        .distance(100)
-    )
-    .alphaTarget(0.05)
-    .stop();
-};
-
-// Handle interactions with nodes and edges
-const useLayoutedElements = () => {
+const useLayoutElements = () => {
   const { getNodes, getEdges, setNodes, fitView } = useReactFlow();
-  const initialized = getNodes().length > 0;
+  const nodes = getNodes();
+  const edges = getEdges();
+  const initialized = nodes.length > 0;
 
   useEffect(() => {
     if (!initialized) return;
 
-    const nodes = getNodes().map((node) => ({
-      ...node,
-      x: isFinite(node.position?.x) ? node.position.x : 0, // Default to 0 if NaN
-      y: isFinite(node.position?.y) ? node.position.y : 0  // Default to 0 if NaN
-    }));
-    const edges = getEdges();
-
-    const simulation = createSimulation(nodes, edges);
+    // Initiate force simulation
+    const simulation = forceSimulation(nodes)
+      .force('charge', forceManyBody().strength(-1000))
+      .force('x', forceX().strength(0.05))
+      .force('y', forceY().strength(0.05))
+      .force('collide', collide())
+      .force('link', forceLink(edges).id((d) => d.id).strength(0.05).distance(100))
+      .alphaTarget(0.05)
+      .on('tick', () => {
+        setNodes((prevNodes) => 
+          prevNodes.map((node, i) => ({
+            ...node,
+            position: { x: nodes[i].x, y: nodes[i].y },
+          }))
+        );
+        fitView();
+      });
 
     const tick = () => {
-      simulation.tick();
-      setNodes(
-        nodes.map((node) => ({
-          ...node,
-          position: {
-            x: isFinite(node.x) ? node.x : 0, // Default to 0 if NaN
-            y: isFinite(node.y) ? node.y : 0  // Default to 0 if NaN
-          }
-        }))
-      );
-      window.requestAnimationFrame(() => {
-        fitView();
-        tick();
-      });
+      window.requestAnimationFrame(tick);
     };
-
     tick();
 
-    return () => simulation.stop(); // Clean up on unmount
-  }, [initialized, getNodes, getEdges, setNodes, fitView]);
+    return () => {
+      simulation.stop();
+    };
+  }, [initialized, nodes, edges, setNodes, fitView]);
 
   return [initialized];
 };
 
-// Render nodes and edges
 const LayoutFlow = () => {
   const [nodes, , onNodesChange] = useNodesState(initialNodes);
   const [edges, , onEdgesChange] = useEdgesState(initialEdges);
-  const [initialized] = useLayoutedElements();
+  const [initialized] = useLayoutElements();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState('');
+
+  const handleNodeClick = (event, node) => {
+    setModalContent(`Node clicked: ${node.id}`);
+    setIsModalOpen(true);
+  };
 
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
+    <>
+      <div style={{ width: '100vw', height: '100vh' }}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onNodeClick={handleNodeClick} // Add this line
+        >
+          <Panel>
+            {initialized}
+          </Panel>
+          <Controls />
+          <MiniMap />
+          <Background variant="dots" gap={12} size={1} />
+        </ReactFlow>
+      </div>
+
+      <Modal
+        title="Node Information"
+        open={isModalOpen}
+        onOk={() => setIsModalOpen(false)}
+        onCancel={() => setIsModalOpen(false)}
       >
-        <Panel>
-          {initialized ? "Layout Initialized" : "Initializing Layout..."}
-        </Panel>
-        <Controls />
-        <MiniMap />
-        <Background variant="dots" gap={12} size={1} />
-      </ReactFlow>
-    </div>
+        <p>{modalContent}</p>
+      </Modal>
+    </>
   );
 };
 
