@@ -15,7 +15,9 @@ import { initialNodes, initialEdges } from './utils/nodes-edges.js';
 import { collide } from './utils/collide.js';
 import { forceSimulation, forceLink, forceManyBody, forceX, forceY } from 'd3-force';
 import { Modal } from 'antd';
+import StudentOutcomeResults from './components/StudentOutcomeResults';
 
+// Custom node color
 const getNodeColor = (label) => {
   if (label.includes('LA')) return '#80CED7';
   if (label.includes('PR')) return '#8E6C88';
@@ -63,6 +65,7 @@ const useLayoutElements = () => {
 };
 
 const LayoutFlow = () => {
+  // Nodes and other big components
   const [nodes, , onNodesChange] = useNodesState(
     initialNodes.map((node) => ({
       ...node,
@@ -78,6 +81,10 @@ const LayoutFlow = () => {
     setModalContent(`Node clicked: ${node.id}`);
     setIsModalOpen(true);
   };
+
+  // Canvas API logistics
+  const courseId = '790';
+  const studentId = '99499058';
 
   return (
     <>
@@ -104,7 +111,8 @@ const LayoutFlow = () => {
         onOk={() => setIsModalOpen(false)}
         onCancel={() => setIsModalOpen(false)}
       >
-        <p>{modalContent}</p>
+        <h1>Canvas Student Outcome Results</h1>
+        <StudentOutcomeResults courseId={courseId} studentId={studentId} />
       </Modal>
     </>
   );
