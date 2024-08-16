@@ -16,6 +16,12 @@ import { collide } from './utils/collide.js';
 import { forceSimulation, forceLink, forceManyBody, forceX, forceY } from 'd3-force';
 import { Modal } from 'antd';
 
+const getNodeColor = (label) => {
+  if (label.includes('LA')) return '#80CED7';
+  if (label.includes('PR')) return '#8E6C88';
+  return '#FFFFFF';
+};
+
 const useLayoutElements = () => {
   const { getNodes, getEdges, setNodes, fitView } = useReactFlow();
   const nodes = getNodes();
@@ -57,7 +63,12 @@ const useLayoutElements = () => {
 };
 
 const LayoutFlow = () => {
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
+  const [nodes, , onNodesChange] = useNodesState(
+    initialNodes.map((node) => ({
+      ...node,
+      style: { backgroundColor: getNodeColor(node.data.label) }
+    }))
+  );
   const [edges, , onEdgesChange] = useEdgesState(initialEdges);
   const [initialized] = useLayoutElements();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -76,7 +87,7 @@ const LayoutFlow = () => {
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
-          onNodeClick={handleNodeClick} // Add this line
+          onNodeClick={handleNodeClick}
         >
           <Panel>
             {initialized}
