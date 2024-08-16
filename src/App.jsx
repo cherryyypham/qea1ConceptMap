@@ -1,59 +1,46 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
-    ReactFlow,
-    MiniMap,
-    Controls,
-    Background,
-    useNodesState,
-    useEdgesState,
-    addEdge,
+  ReactFlow,
+  ReactFlowProvider,
+  MiniMap,
+  Controls,
+  Background,
+  useNodesState,
+  useEdgesState,
+  useReactFlow,
 } from '@xyflow/react';
-
 import '@xyflow/react/dist/style.css';
-import parseCSV from './utils/parseCSV';
+import { initialNodes, initialEdges } from './utils/nodes-edges.js';
 
-export default function App() {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [loading, setLoading] = useState(true);
+const useLayoutedElements = () => {
+  const { getNodes, getEdges } = useReactFlow();
+  const initialized = getNodes().length > 0;
 
-  const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges],
-  );
+  return useMemo(() => {
+    const nodes = getNodes().map((node) => ({
+      ...node,
+      x: node.position.x,
+      y: node.position.y,
+    }));
+    const edges = getEdges();
+    const running = false;
 
-  useEffect(() => {
-    async function loadData() {
-      const data = await parseCSV('/csvGen.csv');
-      console.log(data);
-      const newNodes = [];
-      const newEdges = [];
+    if (!initialized || nodes.length === 0) return [false, {}];
 
-      data.forEach((item, index) => {
-        newNodes.push({
-          id: item.lgLabel,
-          position: { x: 0, y: index * 100 },
-          data: { label: item.lgLabel }
-        });
+    const isRunning = () => running;
 
-        item.conPostReqs.forEach(conPostReq => {
-          newEdges.push({
-            id: `${item.lgLabel}-${conPostReq}`,
-            source: item.lgLabel,
-            target: conPostReq
-          });
-        });
-        });
+    const toggle = () => {
+      // Implement toggle logic if necessary
+    };
 
-        setNodes(newNodes);
-        setEdges(newEdges);
-        setLoading(false);
-    }
+    return [true, { toggle, isRunning }];
+  }, [initialized, getNodes, getEdges]);
+};
 
-    loadData();
-  }, []);
-
-  if (loading) return <p>Loading...</p>;
+const LayoutFlow = () => {
+  const [nodes, , onNodesChange] = useNodesState(initialNodes);
+  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+  const [initialized, { toggle, isRunning }] = useLayoutedElements();
 
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
@@ -62,12 +49,19 @@ export default function App() {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
       >
         <Controls />
         <MiniMap />
         <Background variant="dots" gap={12} size={1} />
       </ReactFlow>
     </div>
+  );
+};
+
+export default function App() {
+  return (
+    <ReactFlowProvider>
+      <LayoutFlow />
+    </ReactFlowProvider>
   );
 }
