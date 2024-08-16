@@ -11,6 +11,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { initialNodes, initialEdges } from './utils/nodes-edges.js';
+console.log(initialNodes);
 import useLayoutElements from './utils/useLayoutElements';
 import { Modal } from 'antd';
 import StudentOutcomeResults from './components/StudentOutcomeResults';
@@ -38,7 +39,14 @@ const LayoutFlow = () => {
   const [modalContent, setModalContent] = useState('');
 
   const handleNodeClick = (event, node) => {
-    setModalContent(`Node clicked: ${node.id}`);
+    setModalContent(
+      <div>
+        <StudentOutcomeResults courseId={courseId} studentId={studentId} />
+        <p><strong>Pre-requisites:</strong> {node.data.preReqs.join(', ') || 'None'}</p>
+        <p><strong>Post-requisites:</strong> {node.data.conPostReqs.join(', ') || 'None'}</p>
+        <p><strong>Lessons:</strong> {node.data.lessons.join(', ') || 'None'}</p>
+      </div>
+    );
     setIsModalOpen(true);
   };
 
@@ -69,7 +77,7 @@ const LayoutFlow = () => {
         onOk={() => setIsModalOpen(false)}
         onCancel={() => setIsModalOpen(false)}
       >
-        <StudentOutcomeResults courseId={courseId} studentId={studentId} />
+        {modalContent}
       </Modal>
     </>
   );

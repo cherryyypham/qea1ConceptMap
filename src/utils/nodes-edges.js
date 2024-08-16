@@ -10,7 +10,12 @@ export const initialEdges = [];
     initialNodes.push({
       id: item.lgLabel,
       position: { x: 0, y: index * 100 },
-      data: { label: item.lgLabel },
+      data: { 
+        label: item.lgLabel,
+        preReqs: item.preReqs,
+        conPostReqs: item.conPostReqs,
+        lessons: item.lessons
+      },
     });
 
     item.conPostReqs.forEach((conPostReq) => {

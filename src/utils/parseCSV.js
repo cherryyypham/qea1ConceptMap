@@ -12,7 +12,7 @@ const parseCSV = (filePath) => {
             lgLabel: row.learningGoals,
             preReqs: row.preReqs ? row.preReqs.split(',').map((item) => item.trim()) : [],
             conPostReqs: row.conPostReqs ? row.conPostReqs.split(',').map((item) => item.trim()) : [],
-            progress: parseFloat(row.progress) || 0.0,
+            lessons: row.lessons ? row.lessons.split(',').map((item) => item.trim()) : [],
           }));
           resolve(data);
         } catch (error) {
