@@ -8,11 +8,11 @@ const parseCSV = (filePath) => {
       skipEmptyLines: true,
       complete: (result) => {
         try {
-          const data = result.data.map(row => ({
+          const data = result.data.map((row) => ({
             lgLabel: row.learningGoals,
-            preReqs: row.preReqs ? row.preReqs.split(',').map(item => item.trim()) : [],
-            conPostReqs: row.conPostReqs ? row.conPostReqs.split(',').map(item => item.trim()) : [],
-            progress: parseFloat(row.progress) || 0.0
+            preReqs: row.preReqs ? row.preReqs.split(',').map((item) => item.trim()) : [],
+            conPostReqs: row.conPostReqs ? row.conPostReqs.split(',').map((item) => item.trim()) : [],
+            progress: parseFloat(row.progress) || 0.0,
           }));
           resolve(data);
         } catch (error) {
@@ -21,7 +21,7 @@ const parseCSV = (filePath) => {
       },
       error: (error) => {
         reject(error);
-      }
+      },
     });
   });
 };
