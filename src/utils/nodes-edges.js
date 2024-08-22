@@ -4,7 +4,7 @@ export const initialNodes = [];
 export const initialEdges = [];
 
 (async () => {
-  const data = await parseCSV('/csvGen.csv');
+  const data = await parseCSV('/qea1ConceptMap/csvGen.csv');
 
   data.forEach((item, index) => {
     initialNodes.push({
